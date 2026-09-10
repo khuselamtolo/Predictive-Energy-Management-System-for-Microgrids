@@ -1,0 +1,86 @@
+HAMPEL PARAMETER TUNING + SENSITIVITY ANALYSIS
+==============================================================
+input                : aggregate_total_load.csv
+series               : total_active_power_kw
+readings             : 69,696  (0 missing)
+gap-free run used    : 69,696 samples (2002-02-01 00:00 to 2002-09-30 23:55)
+moments              : mean 244.453, sd 102.063, skew 0.602, excess kurtosis -0.014
+filter implementation: project outlier_detection.hampel_filter
+trials               : 25 seeds x 30 faults (('spike', 'dropout', 'level_shift', 'flatline')) at [1.5, 2.0, 3.0, 4.0, 6.0, 8.0] robust SDs
+
+SCORING
+--------------------------------------------------------------
+Precision is sample-level, recall is event-level. F0.5 is the headline
+because a false positive here means a real demand peak gets treated as
+an error, which is more damaging to the forecast than missing a fault.
+
+BEST CELL
+--------------------------------------------------------------
+window = 48 samples, sigma = 5
+  F0.5 0.758 (sd across seeds 0.045)
+  precision 0.924   event recall 0.447   F1 0.599
+  flags 54 samples per trial on the corrupted series
+
+Top cells. * marks those within one standard error (0.0090) of the
+best, i.e. not statistically distinguishable from it at this many trials.
+ * window  48  sigma  5.0   F0.5 0.758   P 0.924  R 0.447   flags on real data: 4
+   window  96  sigma  4.0   F0.5 0.747   P 0.958  R 0.405   flags on real data: 2
+   window  24  sigma  6.0   F0.5 0.746   P 0.934  R 0.423   flags on real data: 2
+   window  48  sigma  4.0   F0.5 0.734   P 0.814  R 0.536   flags on real data: 14
+   window  48  sigma  6.0   F0.5 0.734   P 0.974  R 0.375   flags on real data: 1
+   window  96  sigma  3.5   F0.5 0.724   P 0.857  R 0.455   flags on real data: 9
+   window  24  sigma  5.0   F0.5 0.701   P 0.790  R 0.491   flags on real data: 11
+   window  96  sigma  5.0   F0.5 0.695   P 1.000  R 0.325   flags on real data: 0
+   window  96  sigma  3.0   F0.5 0.680   P 0.744  R 0.515   flags on real data: 21
+   window  24  sigma  8.0   F0.5 0.670   P 0.954  R 0.312   flags on real data: 1
+  (1 of 63 cells within one standard error)
+
+LOCAL SENSITIVITY (one parameter at a time, from the best cell)
+--------------------------------------------------------------
+  window 48 -> 24: F0.5 0.758 -> 0.701 (-0.057), precision 0.924 -> 0.790, recall 0.447 -> 0.491
+  window 48 -> 96: F0.5 0.758 -> 0.695 (-0.063), precision 0.924 -> 1.000, recall 0.447 -> 0.325
+  sigma 5 -> 4: F0.5 0.758 -> 0.734 (-0.024), precision 0.924 -> 0.814, recall 0.447 -> 0.536
+  sigma 5 -> 6: F0.5 0.758 -> 0.734 (-0.024), precision 0.924 -> 0.974, recall 0.447 -> 0.375
+
+DETECTION LIMIT (event recall by fault size, at the best cell)
+--------------------------------------------------------------
+Spikes and level shifts only - dropouts and flatlines have no amplitude
+parameter, so including them would flatten this curve.
+   1.5 robust SD : recall 0.295
+   2.0 robust SD : recall 0.381
+   3.0 robust SD : recall 0.700
+   4.0 robust SD : recall 0.843
+   6.0 robust SD : recall 0.968
+   8.0 robust SD : recall 1.000
+
+FALSE POSITIVES vs THE EVENING PEAK
+--------------------------------------------------------------
+  peak window 17:00-21:00 = 16.7% of the day
+  false positives landing in it: 0/99 = 0.0%
+  enrichment vs chance: 0.00x
+  (>1 means the filter preferentially misreads real peaks as errors)
+
+STABILITY ON THE UNTOUCHED SERIES (no injection)
+--------------------------------------------------------------
+How many points each cell flags in the real data. A parameter choice
+that swings this wildly is one the data cannot justify.
+
+  window |     2.0     2.5     3.0     3.5     4.0     5.0     6.0     8.0    10.0
+  --------------------------------------------------------------------------------
+       6 |    5508    3488    2334    1630    1183     665     422     189      98
+      12 |    3801    1857     976     565     319     126      56      16       4
+      24 |    2036     812     336     135      60      11       2       1       0
+      48 |    1086     330     105      35      14       4       1       0       0
+      96 |     638     129      21       9       2       0       0       0       0
+     144 |    1475     424     118      21       5       0       0       0       0
+     288 |    2877     814     174      28       4       0       0       0       0
+
+At the chosen cell: 4 points flagged (0.01% of the series).
+
+HOW TO READ THIS
+--------------------------------------------------------------
+The best cell is the best against SIMULATED faults. If the injected
+faults do not resemble the errors actually present, the ranking does
+not transfer. Weight the near-optimal set and the detection limit more
+heavily than the single winning cell, and treat the flag counts on the
+untouched series as review candidates rather than confirmed errors.
