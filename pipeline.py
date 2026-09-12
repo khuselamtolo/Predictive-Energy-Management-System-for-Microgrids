@@ -181,11 +181,7 @@ class SentinelStep:
         lines += [
             "",
             "NOTES",
-            "  Sentinel codes become NaN - genuine holes. They are not filled here; that is",
-            "  the next step's job, deliberately kept separate so the two can be run apart.",
-            "  Left as -999 a single code would drag a plot's axis down and corrupt every",
-            "  statistic computed over the column.",
-            "  The file on disk is never modified.",
+            "  Sentinel codes are changed to NaN, leaving holes in th dataset.",
         ]
 
         headline = (f"{n_hits:,} sentinel reading(s) replaced with NaN across "
@@ -253,11 +249,7 @@ class InterpolateStep:
         lines += [
             "",
             "NOTES",
-            "  Each channel is interpolated independently - a neighbour's reading is not",
-            "  evidence about this meter.",
-            "  Interpolation runs BEFORE aggregation on purpose: summing first would let a",
-            "  missing household silently reduce the total instead of raising a gap.",
-            "  The file on disk is never modified.",
+            "  Each channel is interpolated independently.",
         ]
 
         headline = f"{n_filled:,} reading(s) interpolated" + (
@@ -328,9 +320,6 @@ class AggregateStep:
                 "AGGREGATION PULLS THE DISTRIBUTION TOWARD SYMMETRY",
                 f"  individual channels: skew {per_h_skew.min():.2f} to {per_h_skew.max():.2f}",
                 f"  aggregate:           skew {agg.skew():.2f}",
-                "  Individual households are spiky and strongly right-skewed; simultaneous",
-                "  peaks are rare, so the sum is far closer to Gaussian than its parts. This",
-                "  is why forecasting the total is an easier problem than forecasting a meter.",
             ]
 
         if n_unknown:
@@ -338,14 +327,12 @@ class AggregateStep:
                 "",
                 "WHY SOME TOTALS ARE UNKNOWN",
                 f"  {n_unknown:,} timestamp(s) still had at least one channel missing after",
-                "  interpolation, so the total there is genuinely unknown and is left NaN",
-                "  rather than computed from the channels that did report. Summing the rest",
-                "  would silently undercount and look like a real drop in demand.",
+                "  interpolation, so the total there is unknown and is left as NaN.",
             ]
             missing_rows = before.isna().sum(axis=1)
             worst = missing_rows[missing_rows > 0].sort_values(ascending=False).head(5)
             if not worst.empty:
-                lines += ["", "  Worst timestamps - naive sum vs. the honest answer:"]
+                lines += ["", "  Worst timestamps - naive sum vs. true answer:"]
                 for ts, n_missing in worst.items():
                     lines.append(
                         f"    {ts}: {int(n_missing)} channel(s) missing → "
@@ -356,10 +343,7 @@ class AggregateStep:
         lines += [
             "",
             "NOTES",
-            "  The result is now a single aggregate series - the same shape as a",
-            "  pre-aggregated CSV import - so outlier detection, calibration and cleaning",
-            "  all become available and behave identically either way.",
-            "  The file on disk is never modified.",
+            "  The result is a single aggregate series (csv).",
         ]
 
         headline = (f"{before.shape[1]} channels summed into one series; "

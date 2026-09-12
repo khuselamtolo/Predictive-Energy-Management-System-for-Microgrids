@@ -354,10 +354,10 @@ def calibrate(
         by_len = {L: float(np.mean(v)) for L, v in sorted(dropout_runs.items())}
         if by_len[min(by_len)] - by_len[max(by_len)] > 0.05:
             notes.append(
-                "Longer dropouts are harder to catch, not easier: detection of the first "
+                "Detection of the first "
                 + ", ".join(f"{100 * r:.0f}% at run length {L}" for L, r in by_len.items())
                 + ". Consecutive bad readings sit inside each other's window and inflate "
-                "the local spread, hiding themselves."
+                "the local spread."
             )
 
     return CalibrationResult(

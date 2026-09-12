@@ -200,8 +200,6 @@ class LoadProfileApp(tk.Tk):
         self._body_pane = body
 
         opening = "Import a file to begin."
-        if self._theme.get("system_dark") and self._theme.get("applied"):
-            opening += "  (Your system is in dark mode; the app stays light on purpose.)"
         self.status_var = tk.StringVar(value=opening)
         ttk.Label(self, textvariable=self.status_var, relief="sunken",
                   anchor="w", padding=(8, 4)).pack(side="bottom", fill="x")
@@ -668,10 +666,7 @@ class LoadProfileApp(tk.Tk):
         try:
             window = int(float(self.window_var.get()))
             ceiling = max_achievable_zscore(window)
-            return (f"Flags a reading more than σ rolling standard deviations from its rolling "
-                    f"mean. Window {self.data.samples_to_duration(window)}; the highest "
-                    f"reachable Z-score at this window is {ceiling:.2f}σ. "
-                    + self._OUTLIER_CAVEATS)
+            return (f"The maximum Z-score at this window is {ceiling:.2f}σ. ")
         except (ValueError, AttributeError):
             return ("Flags a reading more than σ rolling standard deviations from its rolling "
                     "mean. " + self._OUTLIER_CAVEATS)
@@ -1539,7 +1534,7 @@ class LoadProfileApp(tk.Tk):
         ax.set_yticklabels([str(i) for i in pivot.index])
         ax.set_xlabel("Threshold (σ)")
         ax.set_ylabel("Window (samples)")
-        ax.set_title("Sensitivity surface: which settings actually recover known faults",
+        ax.set_title("Sensitivity surface",
                      fontsize=11, fontweight="bold", loc="left")
 
         best_r = list(pivot.index).index(int(result.best["window"]))

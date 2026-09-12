@@ -102,9 +102,7 @@ def build_report(
     if not worst_timestamps.empty:
         lines += [
             "",
-            "Timestamps with the most simultaneous sentinel hits",
-            "(a cluster here suggests a shared logging/communication outage,",
-            " not 66 independent sensor faults):",
+            "Timestamps with the most simultaneous sentinel hits:",
         ]
         for ts, count in worst_timestamps.items():
             lines.append(f"  {ts}: {count} households")
